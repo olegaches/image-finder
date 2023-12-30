@@ -6,17 +6,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.staggeredgrid.LazyHorizontalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemInfo
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
-import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -27,10 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -38,7 +36,6 @@ import coil.compose.AsyncImage
 import com.olegaches.imagefinder.R
 import com.olegaches.imagefinder.util.observeAsEvents
 import com.olegaches.imagefinder.util.toDpSize
-import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 
@@ -107,14 +104,19 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
                         if(imageItem != null) {
                             AsyncImage(
                                 modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(imageItem.width.toFloat() / imageItem.height, false)
                                     .clickable {
-                                        handleEvent(ImagesListEvent.OnImageClicked(
-                                            index = index
-                                        ))
+                                        handleEvent(
+                                            ImagesListEvent.OnImageClicked(
+                                                index = index
+                                            )
+                                        )
                                     },
                                 model = imageItem.uri,
+                                placeholder = painterResource(id = R.drawable.cocktail_placeholder),
                                 contentDescription = null,
-                                contentScale = ContentScale.Fit
+                                contentScale = ContentScale.FillBounds
                             )
                         }
                     }

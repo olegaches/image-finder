@@ -6,5 +6,9 @@ data class ImageDto(
     @Json(name = "position")
     val position: Int,
     @Json(name = "original")
-    val original: String
+    val original: String,
+    @Json(name = "original_width")
+    val width: Int,
+    @Json(name = "original_height")
+    val height: Int
 )

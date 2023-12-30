@@ -29,7 +29,7 @@ class ImageSearchRepositoryImpl(
     @OptIn(ExperimentalPagingApi::class)
     override fun searchImages(query: String): Flow<PagingData<Image>> {
         return Pager(
-            config = PagingConfig(pageSize = 100),
+            config = PagingConfig(pageSize = 100, initialLoadSize = 100),
             remoteMediator = ImageRemoteMediator(
                 query = query,
                 api = imagesSearchApi,

@@ -1,7 +1,5 @@
 package com.olegaches.imagefinder.presentation
 
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntOffset
 import androidx.paging.PagingData
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.childContext
@@ -27,20 +25,22 @@ class ImageDetailComponent(
         ComponentContext,
         Int,
         StateFlow<PagingData<Image>>,
-        scrollToIndex: (Int) -> Unit
+        scrollToIndex: (Int) -> Unit,
+        () -> Unit
     ) -> PagerComponent,
 ): ComponentContext by componentContext, IImageDetailComponent {
 
     override val detailTopBarComponent = DetailTopBarComponent(
         childContext(key = "detailTopBarComponent"),
-        navigateBack
+        { pagerComponent.handleEvent(PagerEvent.OnBackClicked) }
     )
 
     override val pagerComponent = pagerComponentFactory(
         childContext(key = "pagerComponent"),
         index,
         list,
-        scrollToImage
+        scrollToImage,
+        navigateBack
     )
 
     private val backCallback = BackCallback {

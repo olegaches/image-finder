@@ -2,6 +2,7 @@ package com.olegaches.imagefinder.presentation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.material.icons.Icons
@@ -23,13 +24,13 @@ fun DetailTopBar(detailTopBarComponent: IDetailTopBarComponent) {
     }
     AnimatedVisibility(
         visibleState = transitionState,
-        enter = fadeIn(),
-        exit = fadeOut()
+        enter = fadeIn(tween(1000)),
+        exit = fadeOut(tween(1000))
     ) {
         TopAppBar(
             title = {},
             navigationIcon = {
-                IconButton(onClick = detailTopBarComponent::onBackClicked) {
+                IconButton(onClick = detailTopBarComponent::onBackIconClicked) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = null

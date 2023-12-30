@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ImageRemoteMediator(
     private val query: String,
     private val firstLoad: AtomicBoolean = AtomicBoolean(true),
+    private val flag: AtomicBoolean = AtomicBoolean(true),
     private val api: ImageSearchApi,
     private val imageDb: ImageDatabase
 ): RemoteMediator<Int, ImageEntity>() {
@@ -26,7 +27,7 @@ class ImageRemoteMediator(
         }
         val loadKey = when(loadType) {
             LoadType.REFRESH -> {
-                1
+                0
             }
             LoadType.PREPEND -> {
                 return MediatorResult.Success(
@@ -36,25 +37,33 @@ class ImageRemoteMediator(
             LoadType.APPEND -> {
                 val lastItem = state.lastItemOrNull()
                 if(lastItem == null) {
-                    1
+                    0
                 } else {
-                    lastItem.position / state.config.pageSize + 1
+                    (lastItem.id!! + 1) / state.config.pageSize
                 }
             }
         }
 
         return try {
-            val imageDtos = api.search(query = query, pageNumber = loadKey).imagesResults
-            MediatorResult.Success(imageDtos.isEmpty())
-            imageDb.withTransaction {
-                if(loadType == LoadType.REFRESH) {
-                    imageDao.clearAll()
+            val a = state.lastItemOrNull()?.position
+            val b = state.lastItemOrNull()?.id
+            val c = a.toString() + b.toString()
+            if (loadKey != 0 || flag.get()) {
+                val searchResult = api.search(query = query, pageNumber = loadKey)
+                imageDb.withTransaction {
+                    if(loadType == LoadType.REFRESH) {
+                        imageDao.clearAll()
+                    }
+                    val imageEntities = searchResult.imagesResults?.map { it.toImageEntity() }
+                    if (imageEntities != null) {
+                        imageDao.upsertAll(imageEntities)
+                    }
                 }
-                val imageEntities = imageDtos.map { it.toImageEntity() }
-                imageDao.upsertAll(imageEntities)
+                flag.getAndSet(false)
+                MediatorResult.Success(searchResult.pagination.next.isNullOrBlank())
+            } else {
+                MediatorResult.Success(false)
             }
-
-            MediatorResult.Success(imageDtos.isEmpty())
         } catch (t: Throwable) {
             MediatorResult.Error(t)
         }

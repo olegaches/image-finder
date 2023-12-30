@@ -8,5 +8,5 @@ interface IDetailTopBarComponent {
 
     fun changeVisibility(visible: Boolean)
 
-    fun onBackClicked()
+    fun onBackIconClicked()
 }

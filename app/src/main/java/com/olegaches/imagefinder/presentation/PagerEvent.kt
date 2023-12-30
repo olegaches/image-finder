@@ -5,5 +5,6 @@ sealed interface PagerEvent {
         val imagePositionalParam: ImagePositionalParam
     ): PagerEvent
     data object OnBackClicked: PagerEvent
+    data object NavigateBack: PagerEvent
     data class OnScrollTo(val index: Int): PagerEvent
 }

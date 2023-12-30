@@ -78,7 +78,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     // Paging 3
-    implementation("androidx.paging:paging-runtime-ktx:3.3.0-alpha02")
+    implementation("androidx.paging:paging-runtime-ktx:3.2.1")
     implementation("androidx.paging:paging-compose:3.3.0-alpha02")
 
     // Moshi

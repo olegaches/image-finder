@@ -7,17 +7,13 @@ import androidx.paging.cachedIn
 import com.arkivanov.decompose.ComponentContext
 import com.olegaches.imagefinder.domain.model.Image
 import com.olegaches.imagefinder.domain.use_case.SearchImagesUseCase
-import com.olegaches.imagefinder.domain.util.Resource
 import com.olegaches.imagefinder.util.coroutineScope
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
@@ -40,7 +36,7 @@ class ImageListComponent(
             prepend = LoadState.NotLoading(true)
         )
     ))
-    override val listState = _listState.asStateFlow()
+    override val listState: MutableStateFlow<PagingData<Image>> get() = _listState
 
     private val _singleEvents = Channel<ImageListSingleEvent>()
     override val singleEvents = _singleEvents.receiveAsFlow()
@@ -53,7 +49,7 @@ class ImageListComponent(
                         .distinctUntilChanged()
                         .cachedIn(componentScope)
                         .collect { pagingData ->
-                            _listState.update { pagingData }
+                            _listState.value = pagingData
                         }
                 }
                 is ImagesListEvent.OnImageClicked -> {

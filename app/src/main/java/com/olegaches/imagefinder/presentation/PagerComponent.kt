@@ -24,7 +24,9 @@ class PagerComponent(
     @Assisted
     override val list: StateFlow<PagingData<Image>>,
     @Assisted
-    private val scrollToImage: (Int) -> Unit
+    private val scrollToImage: (Int) -> Unit,
+    @Assisted
+    private val navigateBack: () -> Unit
 ): IPagerComponent, ComponentContext by componentContext {
 
     private val _singleEvents = Channel<PagerSingleEvent>()
@@ -52,6 +54,10 @@ class PagerComponent(
 
                 is PagerEvent.OnScrollTo -> {
                     scrollToImage(event.index)
+                }
+
+                PagerEvent.NavigateBack -> {
+                    navigateBack()
                 }
             }
         }
