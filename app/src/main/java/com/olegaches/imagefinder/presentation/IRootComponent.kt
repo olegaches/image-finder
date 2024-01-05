@@ -8,6 +8,6 @@ interface IRootComponent {
 
     sealed interface Child {
         data class ImagesRootComponent(val component: IImagesRootComponent) : Child
-        data class ImageSourceComponent(val component: Any) : Child
+        data class ImageSourceComponent(val component: IImageSourceComponent) : Child
     }
 }

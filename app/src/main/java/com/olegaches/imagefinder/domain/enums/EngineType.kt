@@ -1,4 +1,4 @@
-package com.olegaches.imagefinder.data.remote
+package com.olegaches.imagefinder.domain.enums
 
 import com.squareup.moshi.Json
 

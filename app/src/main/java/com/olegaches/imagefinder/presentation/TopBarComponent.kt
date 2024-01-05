@@ -28,13 +28,13 @@ class TopBarComponent(
 
     private var getSuggestionsJob: Job? = null
 
-    override fun handleEvent(event: TopBarEvent) {
+    override fun handleEvent(event: ImagesTopBarEvent) {
         componentScope.launch {
             val stateFlow = _state
             when(event) {
-                is TopBarEvent.OnQueryChange -> {
+                is ImagesTopBarEvent.OnQueryChange -> {
                     val query = event.value
-                    stateFlow.update { it.copy(query = query, loading = true, suggestions = emptyList()) }
+                    stateFlow.update { it.copy(query = query, loading = true, error = null, suggestions = emptyList()) }
                     getSuggestionsJob?.cancel()
                     if(query.isNotBlank()) {
                         getSuggestionsJob = launch {
@@ -54,17 +54,17 @@ class TopBarComponent(
                         stateFlow.update { it.copy(loading = false) }
                     }
                 }
-                is TopBarEvent.OnSearch -> {
+                is ImagesTopBarEvent.OnSearch -> {
                     val query = event.value
                     if(query.isNotBlank()) {
                         stateFlow.update { it.copy(prevQuery = query, searchBarActive = false) }
                         onSearchClicked(query)
                     }
                 }
-                is TopBarEvent.OnBarActiveChange ->  {
+                is ImagesTopBarEvent.OnBarActiveChange ->  {
                     stateFlow.update { it.copy(searchBarActive = event.value) }
                 }
-                is TopBarEvent.OnBackIconClick -> {
+                is ImagesTopBarEvent.OnBackIconClick -> {
                     stateFlow.update { it.copy(query = it.prevQuery, searchBarActive = false, suggestions = emptyList()) }
                 }
             }

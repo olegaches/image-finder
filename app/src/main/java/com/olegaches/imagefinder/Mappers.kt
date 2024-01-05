@@ -9,7 +9,10 @@ fun ImageDto.toImageEntity(): ImageEntity {
         position = position,
         original = original,
         width = width,
-        height = height
+        height = height,
+        thumbnail = thumbnail,
+        title = title,
+        source = source
     )
 }
 
@@ -18,6 +21,9 @@ fun ImageEntity.toImage(): Image {
         uri = original,
         id = this.id!!,
         width = width,
-        height = height
+        height = height,
+        thumbnail = thumbnail,
+        title = title,
+        source = source
     )
 }

@@ -17,6 +17,9 @@ fun ImageDetailComponentScreen(imageDetailComponent: IImageDetailComponent) {
             containerColor = Color.Transparent,
             topBar = {
                 DetailTopBar(imageDetailComponent.detailTopBarComponent)
+            },
+            bottomBar = {
+                ImageDetailBottomBar(imageDetailComponent.detailBottomBarComponent)
             }
         ) { paddingValues ->
             PagerComponentScreen(pagerComponent = imageDetailComponent.pagerComponent)

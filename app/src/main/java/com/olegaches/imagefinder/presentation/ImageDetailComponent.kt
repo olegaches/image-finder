@@ -18,33 +18,50 @@ class ImageDetailComponent(
     @Assisted
     index: Int,
     @Assisted
+    image: Image,
+    @Assisted
     val list: StateFlow<PagingData<Image>>,
     @Assisted
     scrollToImage: (Int) -> Unit,
+    @Assisted
+    navigateToImageSource: (String) -> Unit,
     pagerComponentFactory: (
         ComponentContext,
         Int,
         StateFlow<PagingData<Image>>,
-        scrollToIndex: (Int) -> Unit,
+        (Int) -> Unit,
+        (Image?) -> Unit,
         () -> Unit
     ) -> PagerComponent,
 ): ComponentContext by componentContext, IImageDetailComponent {
 
     override val detailTopBarComponent = DetailTopBarComponent(
         childContext(key = "detailTopBarComponent"),
-        { pagerComponent.handleEvent(PagerEvent.OnBackClicked) }
+        {
+            pagerComponent.handleEvent(PagerEvent.OnBackClicked)
+            detailBottomBarComponent.changeVisibility(false)
+        }
     )
+
+    override val detailBottomBarComponent: IImageDetailBottomBarComponent =
+        ImageDetailBottomBarComponent(
+            childContext(key = "detailBottomBarComponent"),
+            image,
+            navigateToImageSource
+        )
 
     override val pagerComponent = pagerComponentFactory(
         childContext(key = "pagerComponent"),
         index,
         list,
         scrollToImage,
+        detailBottomBarComponent::updateImage,
         navigateBack
     )
 
     private val backCallback = BackCallback {
         detailTopBarComponent.changeVisibility(false)
+        detailBottomBarComponent.changeVisibility(false)
         pagerComponent.handleEvent(PagerEvent.OnBackClicked)
     }
 

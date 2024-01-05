@@ -5,21 +5,21 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.olegaches.imagefinder.R
 import com.olegaches.imagefinder.data.local.ImageDatabase
 import com.olegaches.imagefinder.data.remote.ImageRemoteMediator
 import com.olegaches.imagefinder.data.remote.ImageSearchApi
+import com.olegaches.imagefinder.domain.enums.Language
+import com.olegaches.imagefinder.domain.enums.Country
 import com.olegaches.imagefinder.domain.model.Image
+import com.olegaches.imagefinder.domain.model.SearchFilter
 import com.olegaches.imagefinder.domain.repository.ImageSearchRepository
 import com.olegaches.imagefinder.toImage
 import com.olegaches.imagefinder.domain.util.Resource
-import com.olegaches.imagefinder.util.UiText
+import com.olegaches.imagefinder.util.handleHttpCallException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import me.tatarka.inject.annotations.Inject
-import retrofit2.HttpException
-import java.io.IOException
 
 @Inject
 class ImageSearchRepositoryImpl(
@@ -27,11 +27,19 @@ class ImageSearchRepositoryImpl(
     private val imageDb: ImageDatabase,
 ): ImageSearchRepository {
     @OptIn(ExperimentalPagingApi::class)
-    override fun searchImages(query: String): Flow<PagingData<Image>> {
+    override fun searchImages(
+        query: String,
+        country: Country?,
+        language: Language?,
+        filter: SearchFilter?
+        ): Flow<PagingData<Image>> {
         return Pager(
             config = PagingConfig(pageSize = 100, initialLoadSize = 100),
             remoteMediator = ImageRemoteMediator(
                 query = query,
+                country = country,
+                language = language,
+                filter = filter,
                 api = imagesSearchApi,
                 imageDb = imageDb
             ),
@@ -57,25 +65,7 @@ class ImageSearchRepositoryImpl(
             val data = apiCall()
             Resource.Success(data = data)
         } catch(throwable: Throwable) {
-            Resource.Error(handleThrowableException(throwable))
-        }
-    }
-
-    private fun handleThrowableException(throwable: Throwable): UiText {
-        return when(throwable) {
-            is HttpException -> {
-                val localizedMessage = throwable.localizedMessage
-                if(localizedMessage.isNullOrEmpty()) {
-                    UiText.StringResource(R.string.unknown_exception)
-                }
-                else {
-                    UiText.DynamicString(localizedMessage)
-                }
-            }
-            is IOException -> {
-                UiText.StringResource(R.string.io_exception)
-            }
-            else -> UiText.StringResource(R.string.unknown_exception)
+            Resource.Error(handleHttpCallException(throwable))
         }
     }
 }

@@ -4,8 +4,9 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
@@ -13,7 +14,10 @@ import me.tatarka.inject.annotations.Inject
 @Inject
 class RootComponent(
     @Assisted componentContext: ComponentContext,
-    private val imagesRootComponentFactory: (ComponentContext) -> ImagesRootComponent,
+    private val imagesRootComponentFactory: (
+        ComponentContext,
+        (String) -> Unit,
+    ) -> ImagesRootComponent,
 ): ComponentContext by componentContext, IRootComponent {
     private val navigation = StackNavigation<ChildConfig>()
 
@@ -32,10 +36,17 @@ class RootComponent(
     ): IRootComponent.Child {
         return when(config) {
             is ChildConfig.Images -> {
-                IRootComponent.Child.ImagesRootComponent(imagesRootComponentFactory(componentContext))
+                IRootComponent.Child.ImagesRootComponent(imagesRootComponentFactory(
+                    componentContext,
+                    { navigation.push(ChildConfig.ImageSource(it)) }
+                ))
             }
             is ChildConfig.ImageSource -> {
-                TODO()
+                IRootComponent.Child.ImageSourceComponent(ImageSourceComponent(
+                    componentContext,
+                    config.url,
+                    navigation::pop
+                ))
             }
         }
     }
@@ -45,6 +56,6 @@ class RootComponent(
         @Serializable
         data object Images : ChildConfig
         @Serializable
-        data object ImageSource : ChildConfig
+        data class ImageSource(val url: String) : ChildConfig
     }
 }

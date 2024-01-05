@@ -16,7 +16,7 @@ fun RootScreen(rootComponent: IRootComponent) {
                 ImagesRootComponentScreen(child.component)
             }
             is IRootComponent.Child.ImageSourceComponent -> {
-                TODO()
+                ImageSourceComponentScreen(imageSourceComponent = child.component)
             }
         }
     }

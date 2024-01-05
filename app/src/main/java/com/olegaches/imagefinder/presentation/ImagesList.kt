@@ -1,42 +1,37 @@
 package com.olegaches.imagefinder.presentation
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemInfo
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.olegaches.imagefinder.R
+import com.olegaches.imagefinder.presentation.composables.ErrorLabel
+import com.olegaches.imagefinder.util.handleHttpCallException
 import com.olegaches.imagefinder.util.observeAsEvents
 import com.olegaches.imagefinder.util.toDpSize
-import java.util.UUID
 
 
 @Composable
@@ -53,19 +48,44 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
                 val visibleItemsInfo = layoutInfo.visibleItemsInfo
                 val firstVisibleItem = visibleItemsInfo.first()
                 val lastVisibleItem = visibleItemsInfo.last()
-                val foundElement: LazyStaggeredGridItemInfo
-                if(index > lastVisibleItem.index) {
+                val foundElement: LazyStaggeredGridItemInfo = if(index > lastVisibleItem.index) {
                     gridState.scrollToItem(index)
-                    foundElement = gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
+                    val tempElement = gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
                     gridState.scrollToItem(
                         index = index,
-                        scrollOffset = layoutInfo.viewportSize.height - foundElement.size.height
+                        scrollOffset = - (layoutInfo.viewportSize.height - tempElement.size.height)
                     )
+                    gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
                 } else if (index < firstVisibleItem.index) {
                     gridState.scrollToItem(index = index)
-                    foundElement = gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
+                    gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
                 } else {
-                    foundElement = gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
+                    var element = visibleItemsInfo.firstOrNull { it.index == index }
+                    if(element == null) {
+                        if(index > visibleItemsInfo[1].index) {
+                            gridState.scrollToItem(index)
+                            val tempElement = gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
+                            gridState.scrollToItem(
+                                index = index,
+                                scrollOffset = - (layoutInfo.viewportSize.height - tempElement.size.height)
+                            )
+                        } else {
+                            gridState.scrollToItem(index)
+                        }
+                        gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
+                    } else {
+                        val viewportHeight = layoutInfo.viewportSize.height
+                        val elementHeight = element.size.height
+                        val elementOffsetY = element.offset.y
+                        if(elementOffsetY + elementHeight > viewportHeight) {
+                            gridState.scrollToItem(index, - (viewportHeight - elementHeight))
+                            element = gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
+                        } else if(elementOffsetY < 0) {
+                            gridState.scrollToItem(index)
+                            element = gridState.layoutInfo.visibleItemsInfo.first { it.index == index }
+                        }
+                        element
+                    }
                 }
                 handleEvent(ImagesListEvent.OnAnimateImage(ImagePositionalParam(
                     size = foundElement.size.toDpSize(density),
@@ -85,10 +105,9 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
             is LoadState.Error -> {
                 ErrorLabel(
                     modifier = Modifier.fillMaxSize(),
-                    text = refreshState.error.message + " 11111111111"
-                ) {
-                    TODO()
-                }
+                    text = handleHttpCallException(refreshState.error).asString(),
+                    onRetry = list::retry
+                )
             }
             is LoadState.NotLoading -> {
                 LazyVerticalStaggeredGrid(
@@ -102,19 +121,28 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
                     ) { index: Int ->
                         val imageItem = list[index]
                         if(imageItem != null) {
-                            AsyncImage(
+                            Image(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .aspectRatio(imageItem.width.toFloat() / imageItem.height, false)
+                                    .aspectRatio(
+                                        imageItem.width.toFloat() / imageItem.height,
+                                        false
+                                    )
+                                    .background(Color.White)
                                     .clickable {
                                         handleEvent(
                                             ImagesListEvent.OnImageClicked(
-                                                index = index
+                                                index = index,
+                                                image = imageItem
                                             )
                                         )
                                     },
-                                model = imageItem.uri,
-                                placeholder = painterResource(id = R.drawable.cocktail_placeholder),
+                                painter = rememberAsyncImagePainter(
+                                    model = imageItem.thumbnail,
+                                    placeholder = painterResource(id = R.drawable.cocktail_placeholder),
+                                    error = painterResource(id = R.drawable.cocktail_placeholder),
+                                    contentScale = ContentScale.FillBounds
+                                ),
                                 contentDescription = null,
                                 contentScale = ContentScale.FillBounds
                             )
@@ -124,10 +152,13 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
                         is LoadState.Loading -> {
                             item(
                                 span = StaggeredGridItemSpan.FullLine,
-                               // key = list.itemKey { it.id }
+                                key = list.itemKey { it.id }
                             ) {
                                 Box(Modifier.fillMaxWidth()) {
-                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp).align(Alignment.Center),
+                                        strokeWidth = 3.dp
+                                    )
                                 }
                             }
                         }
@@ -138,98 +169,15 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
                             ) {
                                 ErrorLabel(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = appendState.error.message + " 2222222222222"
-                                ) {
-                                    TODO()
-                                }
+                                    text = handleHttpCallException(appendState.error).asString(),
+                                    onRetry = list::retry
+                                )
                             }
                         }
                         is LoadState.NotLoading -> Unit
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun ErrorLabel(
-    modifier: Modifier,
-    text: String,
-    onRetry: () -> Unit
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            textAlign = TextAlign.Center,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        TextButton(onClick = onRetry) {
-            Text(
-                text = stringResource(R.string.retry),
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
-    }
-}
-
-data class Fuck(
-    val name: String = UUID.randomUUID().toString(),
-    val poster: String
-)
-
-class MockUtils {
-    companion object {
-        fun getMockPosters(): List<Fuck> {
-            return listOf(
-                Fuck(poster ="https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg"),
-                Fuck(poster ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQgGPPZkESatGZ4Ansdex3I1bhvn0QeTrSYda7CCLqoRH6GAnbrQGV8IcQxmAnX62HuB8&usqp=CAU"),
-                Fuck(poster ="https://pixlr.com/images/index/ai-image-generator-two.webp"),
-                Fuck(poster ="https://media.istockphoto.com/id/508214067/photo/big-wooden-boats-in-water-with-cloudy-sky-and-sunbeams.jpg?s=612x612&w=0&k=20&c=oKkKVc7X035-CMtJX_yTC-K5JOFvXuxfWh1YMC9ZYgs="),
-                Fuck(poster ="https://thumbs.dreamstime.com/b/web-182027161.jpg"),
-                Fuck(poster ="https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg"),
-                Fuck(poster ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQgGPPZkESatGZ4Ansdex3I1bhvn0QeTrSYda7CCLqoRH6GAnbrQGV8IcQxmAnX62HuB8&usqp=CAU"),
-                Fuck(poster ="https://pixlr.com/images/index/ai-image-generator-two.webp"),
-                Fuck(poster ="https://media.istockphoto.com/id/508214067/photo/big-wooden-boats-in-water-with-cloudy-sky-and-sunbeams.jpg?s=612x612&w=0&k=20&c=oKkKVc7X035-CMtJX_yTC-K5JOFvXuxfWh1YMC9ZYgs="),
-                Fuck(poster ="https://thumbs.dreamstime.com/b/web-182027161.jpg"),
-                Fuck(poster ="https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg"),
-                Fuck(poster ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQgGPPZkESatGZ4Ansdex3I1bhvn0QeTrSYda7CCLqoRH6GAnbrQGV8IcQxmAnX62HuB8&usqp=CAU"),
-                Fuck(poster ="https://pixlr.com/images/index/ai-image-generator-two.webp"),
-                Fuck(poster ="https://media.istockphoto.com/id/508214067/photo/big-wooden-boats-in-water-with-cloudy-sky-and-sunbeams.jpg?s=612x612&w=0&k=20&c=oKkKVc7X035-CMtJX_yTC-K5JOFvXuxfWh1YMC9ZYgs="),
-                Fuck(poster ="https://thumbs.dreamstime.com/b/web-182027161.jpg"),
-                Fuck(poster ="https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg"),
-                Fuck(poster ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQgGPPZkESatGZ4Ansdex3I1bhvn0QeTrSYda7CCLqoRH6GAnbrQGV8IcQxmAnX62HuB8&usqp=CAU"),
-                Fuck(poster ="https://pixlr.com/images/index/ai-image-generator-two.webp"),
-                Fuck(poster ="https://media.istockphoto.com/id/508214067/photo/big-wooden-boats-in-water-with-cloudy-sky-and-sunbeams.jpg?s=612x612&w=0&k=20&c=oKkKVc7X035-CMtJX_yTC-K5JOFvXuxfWh1YMC9ZYgs="),
-                Fuck(poster ="https://thumbs.dreamstime.com/b/web-182027161.jpg"),
-                Fuck(poster ="https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg"),
-                Fuck(poster ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQgGPPZkESatGZ4Ansdex3I1bhvn0QeTrSYda7CCLqoRH6GAnbrQGV8IcQxmAnX62HuB8&usqp=CAU"),
-                Fuck(poster ="https://pixlr.com/images/index/ai-image-generator-two.webp"),
-                Fuck(poster ="https://media.istockphoto.com/id/508214067/photo/big-wooden-boats-in-water-with-cloudy-sky-and-sunbeams.jpg?s=612x612&w=0&k=20&c=oKkKVc7X035-CMtJX_yTC-K5JOFvXuxfWh1YMC9ZYgs="),
-                Fuck(poster ="https://thumbs.dreamstime.com/b/web-182027161.jpg"),
-                Fuck(poster ="https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg"),
-                Fuck(poster ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQgGPPZkESatGZ4Ansdex3I1bhvn0QeTrSYda7CCLqoRH6GAnbrQGV8IcQxmAnX62HuB8&usqp=CAU"),
-                Fuck(poster ="https://pixlr.com/images/index/ai-image-generator-two.webp"),
-                Fuck(poster ="https://media.istockphoto.com/id/508214067/photo/big-wooden-boats-in-water-with-cloudy-sky-and-sunbeams.jpg?s=612x612&w=0&k=20&c=oKkKVc7X035-CMtJX_yTC-K5JOFvXuxfWh1YMC9ZYgs="),
-                Fuck(poster ="https://thumbs.dreamstime.com/b/web-182027161.jpg"),
-                Fuck(poster ="https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg"),
-                Fuck(poster ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQgGPPZkESatGZ4Ansdex3I1bhvn0QeTrSYda7CCLqoRH6GAnbrQGV8IcQxmAnX62HuB8&usqp=CAU"),
-                Fuck(poster ="https://pixlr.com/images/index/ai-image-generator-two.webp"),
-                Fuck(poster ="https://media.istockphoto.com/id/508214067/photo/big-wooden-boats-in-water-with-cloudy-sky-and-sunbeams.jpg?s=612x612&w=0&k=20&c=oKkKVc7X035-CMtJX_yTC-K5JOFvXuxfWh1YMC9ZYgs="),
-                Fuck(poster ="https://thumbs.dreamstime.com/b/web-182027161.jpg"),
-                Fuck(poster ="https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg"),
-                Fuck(poster ="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQgGPPZkESatGZ4Ansdex3I1bhvn0QeTrSYda7CCLqoRH6GAnbrQGV8IcQxmAnX62HuB8&usqp=CAU"),
-                Fuck(poster ="https://pixlr.com/images/index/ai-image-generator-two.webp"),
-                Fuck(poster ="https://media.istockphoto.com/id/508214067/photo/big-wooden-boats-in-water-with-cloudy-sky-and-sunbeams.jpg?s=612x612&w=0&k=20&c=oKkKVc7X035-CMtJX_yTC-K5JOFvXuxfWh1YMC9ZYgs="),
-                Fuck(poster ="https://thumbs.dreamstime.com/b/web-182027161.jpg"),
-            )
         }
     }
 }

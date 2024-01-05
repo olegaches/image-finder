@@ -23,7 +23,7 @@ class ImageListComponent(
     @Assisted
     componentContext: ComponentContext,
     @Assisted
-    private val onImageClicked: (Int) -> Unit,
+    private val onImageClicked: (Int, Image) -> Unit,
     @Assisted
     private val animateImage: (ImagePositionalParam) -> Unit,
     private val searchImagesUseCase: SearchImagesUseCase,
@@ -45,7 +45,12 @@ class ImageListComponent(
         componentScope.launch {
             when(event) {
                 is ImagesListEvent.SearchImages -> {
-                    searchImagesUseCase(event.query)
+                    searchImagesUseCase(
+                        query = event.query,
+                        language = null,
+                        country = null,
+                        filter = null,
+                    )
                         .distinctUntilChanged()
                         .cachedIn(componentScope)
                         .collect { pagingData ->
@@ -53,7 +58,7 @@ class ImageListComponent(
                         }
                 }
                 is ImagesListEvent.OnImageClicked -> {
-                    onImageClicked(event.index)
+                    onImageClicked(event.index, event.image)
                 }
                 is ImagesListEvent.OnAnimateImage -> {
                     animateImage(event.imagePosParams)

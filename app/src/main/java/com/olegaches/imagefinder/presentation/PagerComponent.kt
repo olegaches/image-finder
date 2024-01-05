@@ -26,6 +26,8 @@ class PagerComponent(
     @Assisted
     private val scrollToImage: (Int) -> Unit,
     @Assisted
+    private val onCurrentImageChanged: (Image?) -> Unit,
+    @Assisted
     private val navigateBack: () -> Unit
 ): IPagerComponent, ComponentContext by componentContext {
 
@@ -58,6 +60,9 @@ class PagerComponent(
 
                 PagerEvent.NavigateBack -> {
                     navigateBack()
+                }
+                is PagerEvent.OnCurrentImageChanged -> {
+                    onCurrentImageChanged(event.image)
                 }
             }
         }

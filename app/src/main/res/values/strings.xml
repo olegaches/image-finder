@@ -4,4 +4,11 @@
     <string name="io_exception">Ошибка загрузки. Проверьте подключение к сети и повторите попытку.</string>
     <string name="search_images">Search images</string>
     <string name="retry">Retry</string>
+    <string name="go_to_source">Source</string>
+    <string name="clip_art">Clip Art</string>
+    <string name="line_drawing">Line Drawing</string>
+    <string name="gif">GIF</string>
+    <string name="large">Large</string>
+    <string name="medium">Medium</string>
+    <string name="icon">Icon</string>
 </resources>

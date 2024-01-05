@@ -2,17 +2,18 @@ package com.olegaches.imagefinder.presentation
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.childContext
+import com.olegaches.imagefinder.domain.model.Image
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
 
 @Inject
 class ImagesComponent(
     @Assisted componentContext: ComponentContext,
-    @Assisted onImageClicked: (Int) -> Unit,
+    @Assisted onImageClicked: (Int, Image) -> Unit,
     @Assisted animateImage: (ImagePositionalParam) -> Unit,
     imageListComponentFactory: (
         ComponentContext,
-        (Int) -> Unit,
+        (Int, Image) -> Unit,
         (ImagePositionalParam) -> Unit,
     ) -> ImageListComponent,
     topBarComponentFactory: (

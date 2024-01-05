@@ -84,6 +84,9 @@ dependencies {
     // Moshi
     implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
 
+    // WebView
+    implementation("com.google.accompanist:accompanist-webview:0.33.2-alpha")
+
     // Shared element transition waiting room
     implementation("com.github.skydoves:orbital:0.3.3")
 

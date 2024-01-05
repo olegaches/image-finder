@@ -16,8 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.olegaches.imagefinder.R
+import com.olegaches.imagefinder.presentation.composables.ErrorLabel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,19 +46,21 @@ fun ImagesTopBar(topBarComponent: ITopBarComponent) {
     val handleEvent = topBarComponent::handleEvent
     SearchBar(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(50.dp),
+        shape = RoundedCornerShape(40.dp),
         query = state.query,
-        onQueryChange = { handleEvent(TopBarEvent.OnQueryChange(it)) },
-        onSearch = { handleEvent(TopBarEvent.OnSearch(it)) },
+        onQueryChange = { handleEvent(ImagesTopBarEvent.OnQueryChange(it)) },
+        onSearch = { handleEvent(ImagesTopBarEvent.OnSearch(it)) },
         active = state.searchBarActive,
-        onActiveChange = { handleEvent(TopBarEvent.OnBarActiveChange(it)) },
+        onActiveChange = { handleEvent(ImagesTopBarEvent.OnBarActiveChange(it)) },
         trailingIcon = {
             AnimatedVisibility(
                 visible = state.searchBarActive && state.query.isNotEmpty(),
                 enter = scaleIn(),
                 exit = scaleOut()
             ) {
-                IconButton(onClick = { handleEvent(TopBarEvent.OnQueryChange("")) }) {
+                IconButton(onClick = { handleEvent(ImagesTopBarEvent.OnQueryChange("")) }) {
                     Icon(
                         imageVector = Icons.Default.Clear,
                         contentDescription = null
@@ -73,14 +77,14 @@ fun ImagesTopBar(topBarComponent: ITopBarComponent) {
                 }
             ) { active ->
                 if(active) {
-                    IconButton(onClick = { handleEvent(TopBarEvent.OnBackIconClick) }) {
+                    IconButton(onClick = { handleEvent(ImagesTopBarEvent.OnBackIconClick) }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null
                         )
                     }
                 } else {
-                    IconButton(onClick = { handleEvent(TopBarEvent.OnBarActiveChange(true)) }) {
+                    IconButton(onClick = { handleEvent(ImagesTopBarEvent.OnBarActiveChange(true)) }) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = null
@@ -94,7 +98,10 @@ fun ImagesTopBar(topBarComponent: ITopBarComponent) {
         }
     ) {
         Column(
-            modifier = Modifier.navigationBarsPadding().fillMaxWidth().imePadding(),
+            modifier = Modifier
+                .navigationBarsPadding()
+                .fillMaxWidth()
+                .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if(state.loading) {
@@ -105,6 +112,12 @@ fun ImagesTopBar(topBarComponent: ITopBarComponent) {
                 )
             } else if(state.error != null) {
                 Spacer(modifier = Modifier.height(16.dp))
+                ErrorLabel(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = state.error.asString()
+                ) {
+                    handleEvent(ImagesTopBarEvent.OnQueryChange(state.query))
+                }
                 Text(
                     text = state.error.asString(),
                     textAlign = TextAlign.Center,
@@ -118,7 +131,7 @@ fun ImagesTopBar(topBarComponent: ITopBarComponent) {
                         ListItem(
                             modifier = Modifier
                                 .clickable {
-                                    handleEvent(TopBarEvent.OnSearch(suggestion))
+                                    handleEvent(ImagesTopBarEvent.OnSearch(suggestion))
                                 },
                             leadingContent = {
                                 Icon(imageVector = Icons.Default.Search, contentDescription = null)

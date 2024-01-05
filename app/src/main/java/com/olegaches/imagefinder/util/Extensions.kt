@@ -12,9 +12,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.arkivanov.essenty.lifecycle.LifecycleOwner
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.olegaches.imagefinder.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
+import retrofit2.HttpException
+import java.io.IOException
 import kotlin.coroutines.CoroutineContext
 
 fun LifecycleOwner.coroutineScope(context: CoroutineContext): CoroutineScope {
@@ -43,5 +46,23 @@ fun <T> Flow<T>.observeAsEvents(onEvent: suspend (T) -> Unit) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             this@observeAsEvents.collect(onEvent)
         }
+    }
+}
+
+fun handleHttpCallException(throwable: Throwable): UiText {
+    return when(throwable) {
+        is HttpException -> {
+            val localizedMessage = throwable.localizedMessage
+            if(localizedMessage.isNullOrEmpty()) {
+                UiText.StringResource(R.string.unknown_exception)
+            }
+            else {
+                UiText.DynamicString(localizedMessage)
+            }
+        }
+        is IOException -> {
+            UiText.StringResource(R.string.io_exception)
+        }
+        else -> UiText.StringResource(R.string.unknown_exception)
     }
 }

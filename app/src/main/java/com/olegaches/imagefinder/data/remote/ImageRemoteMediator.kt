@@ -7,12 +7,18 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.olegaches.imagefinder.data.local.ImageDatabase
 import com.olegaches.imagefinder.data.local.entity.ImageEntity
+import com.olegaches.imagefinder.domain.enums.Language
+import com.olegaches.imagefinder.domain.enums.Country
+import com.olegaches.imagefinder.domain.model.SearchFilter
 import com.olegaches.imagefinder.toImageEntity
 import java.util.concurrent.atomic.AtomicBoolean
 
 @OptIn(ExperimentalPagingApi::class)
 class ImageRemoteMediator(
     private val query: String,
+    private val language: Language?,
+    private val country: Country?,
+    private val filter: SearchFilter?,
     private val firstLoad: AtomicBoolean = AtomicBoolean(true),
     private val flag: AtomicBoolean = AtomicBoolean(true),
     private val api: ImageSearchApi,
@@ -45,11 +51,14 @@ class ImageRemoteMediator(
         }
 
         return try {
-            val a = state.lastItemOrNull()?.position
-            val b = state.lastItemOrNull()?.id
-            val c = a.toString() + b.toString()
             if (loadKey != 0 || flag.get()) {
-                val searchResult = api.search(query = query, pageNumber = loadKey)
+                val searchResult = api.search(
+                    query = query,
+                    pageNumber = loadKey,
+                    language = language,
+                    country = country,
+                    filter = filter,
+                )
                 imageDb.withTransaction {
                     if(loadType == LoadType.REFRESH) {
                         imageDao.clearAll()
@@ -60,7 +69,8 @@ class ImageRemoteMediator(
                     }
                 }
                 flag.getAndSet(false)
-                MediatorResult.Success(searchResult.pagination.next.isNullOrBlank())
+                //MediatorResult.Success(searchResult.pagination.next.isNullOrBlank())
+                MediatorResult.Success(true)
             } else {
                 MediatorResult.Success(false)
             }

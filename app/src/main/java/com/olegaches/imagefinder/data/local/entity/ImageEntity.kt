@@ -9,7 +9,10 @@ data class ImageEntity(
     @PrimaryKey
     val id: Int? = null,
     val position: Int,
+    val title: String,
+    val source: String,
     val original: String,
+    val thumbnail: String,
     val width: Int,
     val height: Int
 )

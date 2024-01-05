@@ -1,7 +1,5 @@
 package com.olegaches.imagefinder.presentation
 
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntOffset
 import androidx.paging.PagingData
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.childContext
@@ -21,16 +19,20 @@ import me.tatarka.inject.annotations.Inject
 class ImagesRootComponent(
     @Assisted
     componentContext: ComponentContext,
+    @Assisted
+    private val navigateToImageSource: (String) -> Unit,
     private val imageDetailComponentFactory: (
         ComponentContext,
         () -> Unit,
         Int,
+        image: Image,
         StateFlow<PagingData<Image>>,
-        (Int) -> Unit
+        (Int) -> Unit,
+        (String) -> Unit,
     ) -> ImageDetailComponent,
     imagesComponentFactory: (
         ComponentContext,
-        (Int) -> Unit,
+        (Int, Image) -> Unit,
         (ImagePositionalParam) -> Unit,
     ) -> ImagesComponent
 ): ComponentContext by componentContext, IImagesRootComponent {
@@ -38,8 +40,8 @@ class ImagesRootComponent(
 
     override val imagesComponent = imagesComponentFactory(
         childContext(key = "imagesComponent"),
-        { index ->
-            slotNavigation.activate(SlotConfig.Pager(index = index))
+        { index, image ->
+            slotNavigation.activate(SlotConfig.Pager(index = index, image = image))
         },
         { imagePosParam ->
             val pagerComponent = (childSlot.value.child?.instance as? IImagesRootComponent.SlotChild.ImageDetail)?.component?.pagerComponent
@@ -65,10 +67,12 @@ class ImagesRootComponent(
                 IImagesRootComponent.SlotChild.ImageDetail(
                     imageDetailComponentFactory(
                         componentContext,
-                        { slotNavigation.dismiss() },
+                        slotNavigation::dismiss,
                         config.index,
+                        config.image,
                         imageListComponent.listState,
-                        { index -> imageListComponent.handleEvent(ImagesListEvent.OnScrollToImage(index)) }
+                        { index -> imageListComponent.handleEvent(ImagesListEvent.OnScrollToImage(index)) },
+                        navigateToImageSource
                     )
                 )
             }
@@ -78,6 +82,6 @@ class ImagesRootComponent(
     @Serializable
     private sealed interface SlotConfig {
         @Serializable
-        data class Pager(val index: Int) : SlotConfig
+        data class Pager(val index: Int, val image: Image) : SlotConfig
     }
 }
