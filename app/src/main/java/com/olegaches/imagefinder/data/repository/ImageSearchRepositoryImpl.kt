@@ -8,13 +8,13 @@ import androidx.paging.map
 import com.olegaches.imagefinder.data.local.ImageDatabase
 import com.olegaches.imagefinder.data.remote.ImageRemoteMediator
 import com.olegaches.imagefinder.data.remote.ImageSearchApi
-import com.olegaches.imagefinder.domain.enums.Language
 import com.olegaches.imagefinder.domain.enums.Country
+import com.olegaches.imagefinder.domain.enums.Language
 import com.olegaches.imagefinder.domain.model.Image
 import com.olegaches.imagefinder.domain.model.SearchFilter
 import com.olegaches.imagefinder.domain.repository.ImageSearchRepository
-import com.olegaches.imagefinder.toImage
 import com.olegaches.imagefinder.domain.util.Resource
+import com.olegaches.imagefinder.toImage
 import com.olegaches.imagefinder.util.handleHttpCallException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -34,7 +34,7 @@ class ImageSearchRepositoryImpl(
         filter: SearchFilter?
         ): Flow<PagingData<Image>> {
         return Pager(
-            config = PagingConfig(pageSize = 100, initialLoadSize = 100),
+            config = PagingConfig(pageSize = 100, initialLoadSize = 100, prefetchDistance = 10),
             remoteMediator = ImageRemoteMediator(
                 query = query,
                 country = country,

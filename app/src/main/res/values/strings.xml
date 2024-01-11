@@ -11,4 +11,10 @@
     <string name="large">Large</string>
     <string name="medium">Medium</string>
     <string name="icon">Icon</string>
+    <string name="any_size">Any size</string>
+    <string name="any_type">Any type</string>
+    <string name="size">Size</string>
+    <string name="type">Type</string>
+    <string name="filters">Filters</string>
+    <string name="show_results">Show results</string>
 </resources>

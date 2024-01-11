@@ -82,7 +82,7 @@ fun PagerComponentScreen(pagerComponent: IPagerComponent) {
         }
     }
 
-    val settledPage = pagerState.settledPage
+    val settledPage = pagerState.currentPage
     LaunchedEffect(settledPage) {
         handleEvent(PagerEvent.OnCurrentImageChanged(list[settledPage]))
     }

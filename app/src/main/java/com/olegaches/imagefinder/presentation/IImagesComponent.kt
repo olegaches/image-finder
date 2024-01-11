@@ -1,6 +1,6 @@
 package com.olegaches.imagefinder.presentation
 
 interface IImagesComponent {
-    val topBarComponent: ITopBarComponent
+    val topBarComponent: IImagesTopBarComponent
     val imagesListComponent: IImageListComponent
 }

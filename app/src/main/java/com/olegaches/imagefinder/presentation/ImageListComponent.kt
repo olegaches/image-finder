@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.arkivanov.decompose.ComponentContext
 import com.olegaches.imagefinder.domain.model.Image
+import com.olegaches.imagefinder.domain.model.SearchFilter
 import com.olegaches.imagefinder.domain.use_case.SearchImagesUseCase
 import com.olegaches.imagefinder.util.coroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,8 @@ class ImageListComponent(
     private val onImageClicked: (Int, Image) -> Unit,
     @Assisted
     private val animateImage: (ImagePositionalParam) -> Unit,
+    @Assisted
+    private val changeFilterState: (SearchFilter?) -> Unit,
     private val searchImagesUseCase: SearchImagesUseCase,
 ): IImageListComponent, ComponentContext by componentContext {
     private val componentScope = coroutineScope(Dispatchers.Main.immediate + SupervisorJob())
@@ -45,11 +48,17 @@ class ImageListComponent(
         componentScope.launch {
             when(event) {
                 is ImagesListEvent.SearchImages -> {
+                    val query = event.query
+                    val filter = event.filter
+                    changeFilterState(filter)
+                    if(query.isBlank()) {
+                        return@launch
+                    }
                     searchImagesUseCase(
-                        query = event.query,
+                        query = query,
                         language = null,
                         country = null,
-                        filter = null,
+                        filter = event.filter,
                     )
                         .distinctUntilChanged()
                         .cachedIn(componentScope)
@@ -64,7 +73,7 @@ class ImageListComponent(
                     animateImage(event.imagePosParams)
                 }
                 is ImagesListEvent.OnScrollToImage -> {
-                    _singleEvents.send(ImageListSingleEvent.OnPagerDismiss(event.index))
+                    _singleEvents.send(ImageListSingleEvent.ScrollToImage(event.index))
                 }
             }
         }

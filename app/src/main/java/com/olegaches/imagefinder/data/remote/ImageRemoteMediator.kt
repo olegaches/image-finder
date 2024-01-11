@@ -7,8 +7,8 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.olegaches.imagefinder.data.local.ImageDatabase
 import com.olegaches.imagefinder.data.local.entity.ImageEntity
-import com.olegaches.imagefinder.domain.enums.Language
 import com.olegaches.imagefinder.domain.enums.Country
+import com.olegaches.imagefinder.domain.enums.Language
 import com.olegaches.imagefinder.domain.model.SearchFilter
 import com.olegaches.imagefinder.toImageEntity
 import java.util.concurrent.atomic.AtomicBoolean
@@ -20,7 +20,6 @@ class ImageRemoteMediator(
     private val country: Country?,
     private val filter: SearchFilter?,
     private val firstLoad: AtomicBoolean = AtomicBoolean(true),
-    private val flag: AtomicBoolean = AtomicBoolean(true),
     private val api: ImageSearchApi,
     private val imageDb: ImageDatabase
 ): RemoteMediator<Int, ImageEntity>() {
@@ -43,37 +42,32 @@ class ImageRemoteMediator(
             LoadType.APPEND -> {
                 val lastItem = state.lastItemOrNull()
                 if(lastItem == null) {
-                    0
+                    return MediatorResult.Success(false)
                 } else {
-                    (lastItem.id!! + 1) / state.config.pageSize
+                    (lastItem.id + 1) / state.config.pageSize
                 }
             }
         }
 
         return try {
-            if (loadKey != 0 || flag.get()) {
-                val searchResult = api.search(
-                    query = query,
-                    pageNumber = loadKey,
-                    language = language,
-                    country = country,
-                    filter = filter,
-                )
-                imageDb.withTransaction {
-                    if(loadType == LoadType.REFRESH) {
-                        imageDao.clearAll()
-                    }
-                    val imageEntities = searchResult.imagesResults?.map { it.toImageEntity() }
-                    if (imageEntities != null) {
-                        imageDao.upsertAll(imageEntities)
-                    }
+            val searchResult = api.search(
+                query = query,
+                pageNumber = loadKey,
+                language = language,
+                country = country,
+                filter = filter,
+            )
+            val endOfPagination = searchResult.pagination.next == null || searchResult.imagesResults.isNullOrEmpty()
+            imageDb.withTransaction {
+                if(loadType == LoadType.REFRESH) {
+                    imageDao.clearAll()
                 }
-                flag.getAndSet(false)
-                //MediatorResult.Success(searchResult.pagination.next.isNullOrBlank())
-                MediatorResult.Success(true)
-            } else {
-                MediatorResult.Success(false)
+                val imageEntities = searchResult.imagesResults?.map { it.toImageEntity() }
+                if (imageEntities != null) {
+                    imageDao.upsertAll(imageEntities)
+                }
             }
+            MediatorResult.Success(endOfPagination)
         } catch (t: Throwable) {
             MediatorResult.Error(t)
         }

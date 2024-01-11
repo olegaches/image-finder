@@ -7,7 +7,7 @@ import com.olegaches.imagefinder.data.local.ImageDao.Companion.TABLE_NAME
 @Entity(tableName = TABLE_NAME)
 data class ImageEntity(
     @PrimaryKey
-    val id: Int? = null,
+    val id: Int,
     val position: Int,
     val title: String,
     val source: String,

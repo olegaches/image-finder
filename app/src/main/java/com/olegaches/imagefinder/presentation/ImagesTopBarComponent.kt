@@ -16,11 +16,12 @@ import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
 
 @Inject
-class TopBarComponent(
+class ImagesTopBarComponent(
     @Assisted componentContext: ComponentContext,
     @Assisted private val onSearchClicked: (String) -> Unit,
+    @Assisted private val navigateToFilter: () -> Unit,
     private val getSuggestionsUseCase: GetSuggestionsUseCase,
-): ComponentContext by componentContext, ITopBarComponent {
+): ComponentContext by componentContext, IImagesTopBarComponent {
     private val componentScope = coroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _state = MutableStateFlow(TopBarState())
@@ -67,6 +68,7 @@ class TopBarComponent(
                 is ImagesTopBarEvent.OnBackIconClick -> {
                     stateFlow.update { it.copy(query = it.prevQuery, searchBarActive = false, suggestions = emptyList()) }
                 }
+                is ImagesTopBarEvent.OnFilterClicked -> navigateToFilter()
             }
         }
     }

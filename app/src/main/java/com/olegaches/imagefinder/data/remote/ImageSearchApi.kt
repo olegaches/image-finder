@@ -2,9 +2,9 @@ package com.olegaches.imagefinder.data.remote
 
 import com.olegaches.imagefinder.data.remote.dto.AutocompleteDto
 import com.olegaches.imagefinder.data.remote.dto.SearchResultsDto
-import com.olegaches.imagefinder.domain.enums.Language
 import com.olegaches.imagefinder.domain.enums.Country
 import com.olegaches.imagefinder.domain.enums.EngineType
+import com.olegaches.imagefinder.domain.enums.Language
 import com.olegaches.imagefinder.domain.model.SearchFilter
 import retrofit2.http.GET
 import retrofit2.http.Query

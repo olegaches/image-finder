@@ -10,7 +10,10 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.value.Value
 import com.olegaches.imagefinder.domain.model.Image
+import com.olegaches.imagefinder.domain.model.SearchFilter
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.Serializable
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
@@ -34,40 +37,60 @@ class ImagesRootComponent(
         ComponentContext,
         (Int, Image) -> Unit,
         (ImagePositionalParam) -> Unit,
+        () -> Unit,
+        (SearchFilter?) -> Unit
     ) -> ImagesComponent
 ): ComponentContext by componentContext, IImagesRootComponent {
-    private val slotNavigation = SlotNavigation<SlotConfig>()
+    private val pagerNavigation = SlotNavigation<PagerConfig>()
+    private val sheetNavigation = SlotNavigation<SheetConfig>()
+    private val filterState = MutableStateFlow<SearchFilter?>(null)
 
     override val imagesComponent = imagesComponentFactory(
         childContext(key = "imagesComponent"),
         { index, image ->
-            slotNavigation.activate(SlotConfig.Pager(index = index, image = image))
+            pagerNavigation.activate(PagerConfig.Pager(index = index, image = image))
         },
         { imagePosParam ->
-            val pagerComponent = (childSlot.value.child?.instance as? IImagesRootComponent.SlotChild.ImageDetail)?.component?.pagerComponent
+            val pagerComponent = (pagerSlot.value.child?.instance as? IImagesRootComponent.PagerChild.ImageDetail)?.component?.pagerComponent
             pagerComponent?.handleEvent(PagerEvent.OnAnimateImage(imagePosParam))
-        }
+        },
+        { sheetNavigation.activate(SheetConfig.Filter) },
+        { filter -> filterState.update { filter } }
     )
 
-    override val childSlot: Value<ChildSlot<*, IImagesRootComponent.SlotChild>> =
+    override fun dismissSheet() {
+        sheetNavigation.dismiss()
+    }
+
+    override val pagerSlot: Value<ChildSlot<*, IImagesRootComponent.PagerChild>> =
         childSlot(
-            source = slotNavigation,
+            source = pagerNavigation,
             handleBackButton = true,
-            childFactory = ::createSlotChild,
-            serializer = SlotConfig.serializer()
+            key = "PagerSlot",
+            childFactory = ::createPagerChild,
+            serializer = PagerConfig.serializer()
         )
 
-    private fun createSlotChild(
-        config: SlotConfig,
+    override val sheetSlot: Value<ChildSlot<*, IImagesRootComponent.SheetChild>> =
+        childSlot(
+            source = sheetNavigation,
+            handleBackButton = true,
+            key = "SheetSlot",
+            childFactory = ::createSheetChild,
+            serializer = SheetConfig.serializer()
+        )
+
+    private fun createPagerChild(
+        config: PagerConfig,
         componentContext: ComponentContext
-    ): IImagesRootComponent.SlotChild {
+    ): IImagesRootComponent.PagerChild {
         return when(config) {
-            is SlotConfig.Pager -> {
+            is PagerConfig.Pager -> {
                 val imageListComponent = imagesComponent.imagesListComponent
-                IImagesRootComponent.SlotChild.ImageDetail(
+                IImagesRootComponent.PagerChild.ImageDetail(
                     imageDetailComponentFactory(
                         componentContext,
-                        slotNavigation::dismiss,
+                        pagerNavigation::dismiss,
                         config.index,
                         config.image,
                         imageListComponent.listState,
@@ -79,9 +102,38 @@ class ImagesRootComponent(
         }
     }
 
+    private fun createSheetChild(
+        config: SheetConfig,
+        componentContext: ComponentContext
+    ): IImagesRootComponent.SheetChild {
+        return when(config) {
+            is SheetConfig.Filter -> {
+                IImagesRootComponent.SheetChild.Filter(
+                    FilterComponent(
+                        componentContext,
+                        { searchFilter ->
+                            sheetNavigation.dismiss {
+                                val imagesComponent = imagesComponent
+                                val query = imagesComponent.topBarComponent.state.value.query
+                                imagesComponent.imagesListComponent.handleEvent(ImagesListEvent.SearchImages(query, searchFilter))
+                            }
+                        },
+                        filterState.value
+                    )
+                )
+            }
+        }
+    }
+
     @Serializable
-    private sealed interface SlotConfig {
+    private sealed interface PagerConfig {
         @Serializable
-        data class Pager(val index: Int, val image: Image) : SlotConfig
+        data class Pager(val index: Int, val image: Image) : PagerConfig
+    }
+
+    @Serializable
+    private sealed interface SheetConfig {
+        @Serializable
+        data object Filter : SheetConfig
     }
 }

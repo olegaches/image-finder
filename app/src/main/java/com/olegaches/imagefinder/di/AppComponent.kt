@@ -2,7 +2,6 @@ package com.olegaches.imagefinder.di
 
 import android.content.Context
 import androidx.room.Room
-import com.olegaches.imagefinder.data.local.ImageDao
 import com.olegaches.imagefinder.data.local.ImageDatabase
 import com.olegaches.imagefinder.data.remote.ImageSearchApi
 import com.olegaches.imagefinder.data.repository.ImageSearchRepositoryImpl

@@ -6,6 +6,7 @@ import com.olegaches.imagefinder.domain.model.Image
 
 fun ImageDto.toImageEntity(): ImageEntity {
     return ImageEntity(
+        id = position,
         position = position,
         original = original,
         width = width,
@@ -19,7 +20,7 @@ fun ImageDto.toImageEntity(): ImageEntity {
 fun ImageEntity.toImage(): Image {
     return Image(
         uri = original,
-        id = this.id!!,
+        id = this.id,
         width = width,
         height = height,
         thumbnail = thumbnail,

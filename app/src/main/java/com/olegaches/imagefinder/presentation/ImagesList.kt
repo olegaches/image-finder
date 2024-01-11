@@ -42,7 +42,7 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
     val density = LocalDensity.current
     imagesListComponent.singleEvents.observeAsEvents { event ->
         when(event) {
-            is ImageListSingleEvent.OnPagerDismiss -> {
+            is ImageListSingleEvent.ScrollToImage -> {
                 val index = event.index
                 val layoutInfo = gridState.layoutInfo
                 val visibleItemsInfo = layoutInfo.visibleItemsInfo
@@ -152,7 +152,6 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
                         is LoadState.Loading -> {
                             item(
                                 span = StaggeredGridItemSpan.FullLine,
-                                key = list.itemKey { it.id }
                             ) {
                                 Box(Modifier.fillMaxWidth()) {
                                     CircularProgressIndicator(
@@ -165,7 +164,6 @@ fun ImagesList(imagesListComponent: IImageListComponent, paddingValues: PaddingV
                         is LoadState.Error -> {
                             item(
                                 span = StaggeredGridItemSpan.FullLine,
-                                //key = list.itemKey { it.id }
                             ) {
                                 ErrorLabel(
                                     modifier = Modifier.fillMaxWidth(),

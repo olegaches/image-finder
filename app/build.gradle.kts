@@ -83,6 +83,7 @@ dependencies {
 
     // Moshi
     implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
+    implementation ("com.squareup.moshi:moshi:1.14.0")
 
     // WebView
     implementation("com.google.accompanist:accompanist-webview:0.33.2-alpha")
