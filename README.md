@@ -6,11 +6,11 @@
 
 ## Used libraries
 - Jetpack compose + Material3
-- Decompose
+- Decompose (Navigation + Components)
 - Paging 3
-- Room
-- kotlin-inject
-- Retrofit 2
-- Moshi
-- Coil
-- Orbital
+- Room (Caching)
+- kotlin-inject (DI)
+- Retrofit 2 (HTTP calls)
+- Moshi (json parsing, adapters)
+- Coil (Image loading)
+- Orbital (Transition animation)
