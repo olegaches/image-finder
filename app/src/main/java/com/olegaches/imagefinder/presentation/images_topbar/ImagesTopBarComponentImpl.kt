@@ -58,15 +58,17 @@ class ImagesTopBarComponentImpl(
                 is ImagesTopBarEvent.OnSearch -> {
                     val query = event.value
                     if(query.isNotBlank()) {
-                        stateFlow.update { it.copy(prevQuery = query, searchBarActive = false) }
+                        stateFlow.update { it.copy(prevQuery = query, searchBarActive = false, prevSuggestions = it.suggestions) }
                         onSearchClicked(query)
                     }
                 }
                 is ImagesTopBarEvent.OnBarActiveChange ->  {
-                    stateFlow.update { it.copy(searchBarActive = event.value) }
-                }
-                is ImagesTopBarEvent.OnBackIconClick -> {
-                    stateFlow.update { it.copy(query = it.prevQuery, searchBarActive = false, suggestions = emptyList()) }
+                    val searchBarActive = event.value
+                    if(searchBarActive) {
+                        stateFlow.update { it.copy(searchBarActive = true, suggestions = it.prevSuggestions) }
+                    } else {
+                        stateFlow.update { it.copy(query = it.prevQuery, searchBarActive = false) }
+                    }
                 }
                 is ImagesTopBarEvent.OnFilterClicked -> navigateToFilter()
             }

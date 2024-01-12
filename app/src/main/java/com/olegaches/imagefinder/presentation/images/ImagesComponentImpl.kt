@@ -5,11 +5,11 @@ import com.arkivanov.decompose.childContext
 import com.olegaches.imagefinder.domain.model.Image
 import com.olegaches.imagefinder.domain.model.SearchFilter
 import com.olegaches.imagefinder.presentation.image_list.ImageListComponent
-import com.olegaches.imagefinder.presentation.images_topbar.ImagesTopBarComponent
 import com.olegaches.imagefinder.presentation.image_list.ImageListComponentImpl
-import com.olegaches.imagefinder.presentation.util.ImagePositionalParam
 import com.olegaches.imagefinder.presentation.image_list.ImagesListEvent
+import com.olegaches.imagefinder.presentation.images_topbar.ImagesTopBarComponent
 import com.olegaches.imagefinder.presentation.images_topbar.ImagesTopBarComponentImpl
+import com.olegaches.imagefinder.presentation.util.ImagePositionalParam
 import me.tatarka.inject.annotations.Assisted
 import me.tatarka.inject.annotations.Inject
 
@@ -32,7 +32,6 @@ class ImagesComponentImpl(
         () -> Unit,
     ) -> ImagesTopBarComponentImpl
 ): ComponentContext by componentContext, ImagesComponent {
-
     override val imagesListComponent: ImageListComponent = imageListComponentFactory(
         childContext(key = "imagesListComponent"),
         onImageClicked,

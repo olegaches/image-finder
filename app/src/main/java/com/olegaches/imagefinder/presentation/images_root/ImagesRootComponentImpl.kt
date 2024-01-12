@@ -46,7 +46,8 @@ class ImagesRootComponentImpl(
             pagerNavigation.activate(PagerConfig.Pager(index = index, image = image))
         },
         { imagePosParam ->
-            val pagerComponent = (pagerSlot.value.child?.instance as? ImagesRootComponent.PagerChild.ImageDetail)?.component?.pagerComponent
+            val pagerComponent = (pagerSlot.value.child?.instance as?
+                    ImagesRootComponent.PagerChild.ImageDetail)?.component?.pagerComponent
             pagerComponent?.handleEvent(PagerEvent.OnAnimateImage(imagePosParam))
         },
         { sheetNavigation.activate(SheetConfig.Filter) },

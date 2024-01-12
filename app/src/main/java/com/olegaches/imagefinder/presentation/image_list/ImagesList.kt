@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemInfo
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +30,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import coil.compose.rememberAsyncImagePainter
 import com.olegaches.imagefinder.R
+import com.olegaches.imagefinder.domain.model.Image
 import com.olegaches.imagefinder.presentation.util.ImagePositionalParam
 import com.olegaches.imagefinder.presentation.composables.ErrorLabel
 import com.olegaches.imagefinder.util.handleHttpCallException
@@ -109,7 +112,7 @@ fun ImagesList(imagesListComponent: ImageListComponent, paddingValues: PaddingVa
             }
             is LoadState.Error -> {
                 ErrorLabel(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                     text = handleHttpCallException(refreshState.error).asString(),
                     onRetry = list::retry
                 )
@@ -125,31 +128,17 @@ fun ImagesList(imagesListComponent: ImageListComponent, paddingValues: PaddingVa
                         key = list.itemKey { it.id }
                     ) { index: Int ->
                         val imageItem = list[index]
-                        if(imageItem != null) {
-                            Image(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(
-                                        imageItem.width.toFloat() / imageItem.height,
-                                        false
-                                    )
-                                    .background(Color.White)
-                                    .clickable {
-                                        handleEvent(
-                                            ImagesListEvent.OnImageClicked(
-                                                index = index,
-                                                image = imageItem
-                                            )
+                        if (imageItem != null) {
+                            ListItem(
+                                imageItem = imageItem,
+                                onClick = remember { {
+                                    handleEvent(
+                                        ImagesListEvent.OnImageClicked(
+                                            index = index,
+                                            image = imageItem
                                         )
-                                    },
-                                painter = rememberAsyncImagePainter(
-                                    model = imageItem.thumbnail,
-                                    placeholder = painterResource(id = R.drawable.cocktail_placeholder),
-                                    error = painterResource(id = R.drawable.cocktail_placeholder),
-                                    contentScale = ContentScale.FillBounds
-                                ),
-                                contentDescription = null,
-                                contentScale = ContentScale.FillBounds
+                                    )
+                                } }
                             )
                         }
                     }
@@ -160,7 +149,9 @@ fun ImagesList(imagesListComponent: ImageListComponent, paddingValues: PaddingVa
                             ) {
                                 Box(Modifier.fillMaxWidth()) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp).align(Alignment.Center),
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .align(Alignment.Center),
                                         strokeWidth = 3.dp
                                     )
                                 }
@@ -171,7 +162,7 @@ fun ImagesList(imagesListComponent: ImageListComponent, paddingValues: PaddingVa
                                 span = StaggeredGridItemSpan.FullLine,
                             ) {
                                 ErrorLabel(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                                     text = handleHttpCallException(appendState.error).asString(),
                                     onRetry = list::retry
                                 )
@@ -183,4 +174,31 @@ fun ImagesList(imagesListComponent: ImageListComponent, paddingValues: PaddingVa
             }
         }
     }
+}
+
+@Composable
+private fun ListItem(
+    imageItem: Image,
+    onClick: () -> Unit
+) {
+    val placeHolderRes = remember { R.drawable.cocktail_placeholder }
+    val contentScale = remember { ContentScale.FillBounds }
+    Image(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(
+                imageItem.width.toFloat() / imageItem.height,
+                false
+            )
+            .background(Color.White)
+            .clickable(onClick = onClick),
+        painter = rememberAsyncImagePainter(
+            model = imageItem.thumbnail,
+            placeholder = painterResource(id = placeHolderRes),
+            error = painterResource(id = placeHolderRes),
+            contentScale = contentScale
+        ),
+        contentDescription = null,
+        contentScale = contentScale
+    )
 }

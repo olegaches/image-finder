@@ -107,7 +107,7 @@ fun ImagesTopBar(topBarComponent: ImagesTopBarComponent) {
                     }
                 ) { active ->
                     if(active) {
-                        IconButton(onClick = { handleEvent(ImagesTopBarEvent.OnBackIconClick) }) {
+                        IconButton(onClick = { handleEvent(ImagesTopBarEvent.OnBarActiveChange(false)) }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = null
@@ -146,14 +146,16 @@ fun ImagesTopBar(topBarComponent: ImagesTopBarComponent) {
                 } else if(state.error != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                     ErrorLabel(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                         text = state.error.asString()
                     ) {
                         handleEvent(ImagesTopBarEvent.OnQueryChange(state.query))
                     }
                 } else {
                     LazyColumn {
-                        items(state.suggestions + state.suggestions) { suggestion ->
+                        items(state.suggestions) { suggestion ->
                             ListItem(
                                 modifier = Modifier
                                     .clickable {
