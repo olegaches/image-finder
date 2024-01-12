@@ -6,7 +6,9 @@ import com.olegaches.imagefinder.domain.enums.Language
 import com.olegaches.imagefinder.domain.model.Image
 import com.olegaches.imagefinder.domain.model.SearchFilter
 import com.olegaches.imagefinder.domain.repository.ImageSearchRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import me.tatarka.inject.annotations.Inject
 
 @Inject
@@ -24,6 +26,6 @@ class SearchImagesUseCase(
             country = country,
             language = language,
             filter = filter
-        )
+        ).flowOn(Dispatchers.IO)
     }
 }

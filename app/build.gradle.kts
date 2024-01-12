@@ -3,8 +3,6 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     kotlin("plugin.serialization")
-    //kotlin("jvm") version "1.9.21"
-    //kotlin("plugin.serialization") version "1.9.21"
 }
 
 android {
